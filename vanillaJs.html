@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reminder Manager</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Reminder Manager</h1>
+        <div id="reminder-form">
+            <input type="text" id="reminder-text" placeholder="Enter reminder" required>
+            <input type="datetime-local" id="reminder-time" required>
+            <button onclick="addOrUpdateReminder()">Add Reminder</button>
+        </div>
+        <div id="reminders-list">
+            <h2>Active Reminders</h2>
+            <ul id="reminder-items"></ul>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+<style>
+    /* styles.css */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    width: 400px;
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+#reminder-form input, #reminder-form button {
+    margin: 10px;
+    padding: 8px;
+    width: 90%;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+#reminder-items {
+    list-style-type: none;
+    padding: 0;
+}
+
+.reminder-item {
+    background: #eee;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+
+</style>
+<script>
+    // script.js
+
+let reminders = [];  // Array to store reminders
+let reminderTimers = {};  // Object to keep track of timers for each reminder
+
+// Function to add or update a reminder
+function addOrUpdateReminder() {
+    const text = document.getElementById("reminder-text").value;
+    const time = new Date(document.getElementById("reminder-time").value);
+
+    if (!text || isNaN(time)) return alert("Please enter valid reminder details.");
+
+    const id = Date.now().toString();  // Unique ID for the reminder
+
+    // Create reminder object
+    const reminder = { id, text, time };
+    reminders.push(reminder);
+
+    // Schedule the reminder with setTimeout
+    scheduleReminder(reminder);
+
+    // Clear the form
+    document.getElementById("reminder-text").value = "";
+    document.getElementById("reminder-time").value = "";
+
+    renderReminders();
+}
+
+// Function to schedule a reminder using setTimeout
+function scheduleReminder(reminder) {
+    const timeDiff = reminder.time - new Date();
+
+    // Use setTimeout to schedule the alert
+    if (timeDiff > 0) {
+        reminderTimers[reminder.id] = setTimeout(() => {
+            alert(`Reminder: ${reminder.text}`);
+            deleteReminder(reminder.id);  // Remove reminder after alert
+        }, timeDiff);
+    }
+}
+
+// Function to delete a reminder
+function deleteReminder(id) {
+    // Clear the timer
+    clearTimeout(reminderTimers[id]);
+    delete reminderTimers[id];
+
+    // Remove reminder from array
+    reminders = reminders.filter(reminder => reminder.id !== id);
+
+    renderReminders();
+}
+
+// Function to render reminders in the list
+function renderReminders() {
+    const reminderList = document.getElementById("reminder-items");
+    reminderList.innerHTML = "";  // Clear existing items
+
+    reminders.forEach(reminder => {
+        const li = document.createElement("li");
+        li.className = "reminder-item";
+
+        li.innerHTML = `
+            <span>${reminder.text} - ${reminder.time.toLocaleString()}</span>
+            <button onclick="deleteReminder('${reminder.id}')">Delete</button>
+        `;
+
+        reminderList.appendChild(li);
+    });
+}
+
+// Periodically check active reminders and refresh the display
+setInterval(renderReminders, 1000);
+
+</script>
